@@ -1,6 +1,6 @@
 npm i -D tailwindcss@^4 @tailwindcss/postcss autoprefixer
 
-npx shadcn-ui@latest add breadcrumb card checkbox dropdown-menu input label popover select separator table textarea sonner skeleton carousel
+npx shadcn@latest add breadcrumb card checkbox dropdown-menu input label popover select separator table textarea sonner skeleton carousel
 
 npm i react-icons
 npm i install next-themes
