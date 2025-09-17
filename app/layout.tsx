@@ -29,10 +29,10 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className="[scrollbar-gutter:stable] overflow-x-hidden"
+      className="[scrollbar-gutter:stable] overflow-x-hidden "
     >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground transition-colors duration-300`}
         suppressHydrationWarning
       >
         <Providers>
