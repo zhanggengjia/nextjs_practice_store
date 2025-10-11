@@ -1,0 +1,22 @@
+export type product = {
+  id: String;
+  name: String;
+  bauteil_obergruppe: String;
+  bauteil_gruner: String;
+  zustand: String;
+  material: String;
+  ref_gebauede_geschoss: String;
+  breite: Number;
+  hoehe: Number;
+  tiefe: Number;
+  flaeche: Number;
+  masse: Number;
+  anzahl: Number;
+  image: String;
+  featured: Boolean;
+  price: Number;
+  co2: Number;
+  createdAt: Date;
+  updatedAt: Date;
+  clerkId: String;
+};
