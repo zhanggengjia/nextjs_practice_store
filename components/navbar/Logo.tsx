@@ -10,7 +10,7 @@ function Logo() {
       <Link href="/" className="w-50">
         <FaRecycle className="size-6" />
         <div className="text-2xl font-bold text-green-500">
-          Reuse<span className="text-white">Mat</span>
+          Mat<span className="text-background">Hub</span>
         </div>
       </Link>
     </Button>

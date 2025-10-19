@@ -3,12 +3,40 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-body {
-  background-image: url('/5132609.svg');
-  background-size: cover; /* 依需求可用 contain, auto */
-  background-repeat: no-repeat;
-  background-position: center;
-  background-attachment: fixed; /* ✅ 讓背景固定不捲動（可選） */
+@layer utilities {
+  .main-bg {
+    @apply fixed inset-0 -z-50 bg-cover bg-center bg-no-repeat
+           transition-opacity duration-500 ease-in-out pointer-events-none;
+    will-change: opacity;
+  }
+
+  .main-bg-light {
+    opacity: 1;
+    background-image: url('/light-bg.svg');
+  }
+
+  .main-bg-dark {
+    opacity: 0;
+    background-image: url('/dark-bg.svg');
+  }
+
+  html[data-theme='dark'] .main-bg-light {
+    opacity: 0;
+  }
+
+  html[data-theme='dark'] .main-bg-dark {
+    opacity: 1;
+  }
+}
+
+.main-bg-dark::after {
+  content: '';
+  @apply absolute inset-0 bg-black/60 backdrop-blur-[1];
+}
+
+.main-bg-light::after {
+  content: '';
+  @apply absolute inset-0 bg-white/60 backdrop-blur-[1];
 }
 
 @custom-variant dark (&:is(.dark *));

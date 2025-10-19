@@ -1,41 +1,27 @@
-import { fetchFeaturedProducts } from '@/utils/actions';
-import { Product } from '@prisma/client';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import HeroCarousel from './HeroCarousel';
 
-type CSSVars = React.CSSProperties & Record<`--${string}`, string | number>;
-
-async function Hero() {
-  const products: Product[] = await fetchFeaturedProducts();
-  const productsQuantity = products.length;
-
-  const sliderStyle: CSSVars = { '--quantity': productsQuantity };
+const Hero = () => {
   return (
-    <>
-      <div className="banner">
-        <div className="slider" style={sliderStyle}>
-          {products.map((product, index) => (
-            <div
-              className="item"
-              key={product.id}
-              style={{ '--position': index + 1 } as CSSVars}
-            >
-              <img src={product.image} alt="" />
-            </div>
-          ))}
-        </div>
-        <div className="content">
-          <h1>CSS ONLY</h1>
-          <div className="author">
-            <h2>Kevin</h2>
-            <p>
-              <b>Web Design</b>
-            </p>
-            <p>Hello world</p>
-          </div>
-          <div className="model"></div>
-        </div>
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+      <div>
+        <h1 className="max-w-2xl font-bold text-4xl tracking-tight sm:text-6xl">
+          Design sustainably. Build intelligently.
+        </h1>
+        <p className="mt-8 max-w-xl text-lg leading-8">
+          A web platform connecting designers with reusable building materials
+          from soon-to-be-demolished structures — powered by Next.js,
+          TypeScript, and Supabase/PostgreSQL to make material reuse searchable,
+          data-driven, and collaborative.
+        </p>
+        <Button asChild size="lg" className="mt-10">
+          <Link href="/products">Our Products</Link>
+        </Button>
       </div>
-    </>
+      <HeroCarousel />
+    </section>
   );
-}
+};
 
 export default Hero;
