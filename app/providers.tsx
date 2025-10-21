@@ -5,7 +5,7 @@ import ThemeProvider from './theme-provider';
 function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
-      attribute="class"
+      attribute="data-theme"
       defaultTheme="system"
       enableSystem
       // disableTransitionOnChange

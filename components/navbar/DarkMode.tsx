@@ -26,7 +26,6 @@ export default function ModeToggle() {
         <DropdownMenuItem
           onClick={() => {
             setTheme('light');
-            document.documentElement.setAttribute('data-theme', 'light');
           }}
         >
           Light
@@ -34,7 +33,6 @@ export default function ModeToggle() {
         <DropdownMenuItem
           onClick={() => {
             setTheme('dark');
-            document.documentElement.setAttribute('data-theme', 'dark');
           }}
         >
           Dark
