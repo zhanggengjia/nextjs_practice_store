@@ -6,8 +6,14 @@ import FavoriteToggleButton from '@/components/products/FavoriteToggleButton';
 import AddToCart from '@/components/single-product/AddToCart';
 import ProductRating from '@/components/single-product/ProductRating';
 
-async function SingleProductPage({ params }: { params: { id: string } }) {
-  const product = await fetchSingleProduct(params.id);
+async function SingleProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  const product = await fetchSingleProduct(id);
   const {
     name,
     image,
@@ -43,9 +49,9 @@ async function SingleProductPage({ params }: { params: { id: string } }) {
         <div>
           <div className="flex gap-x-8 items-center">
             <h1 className="capitalize text-3xl font-bold">{name}</h1>
-            <FavoriteToggleButton productId={params.id} />
+            <FavoriteToggleButton productId={id} />
           </div>
-          <ProductRating productId={params.id} />
+          <ProductRating productId={id} />
           <h4 className="text-xl mt-2">{ref_gebauede_geschoss}</h4>
           <p className="mt-3 text-md bg-muted inline-block p-2 rounded-md">
             {dollarsAmount}
@@ -59,7 +65,7 @@ async function SingleProductPage({ params }: { params: { id: string } }) {
           <Info text={'Weight'} data={masse} />
           <Info text={'Quantity'} data={anzahl} />
           <Info text={'Co2'} data={co2} />
-          <AddToCart productId={params.id} />
+          <AddToCart productId={id} />
         </div>
       </div>
     </section>
