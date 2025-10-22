@@ -27,22 +27,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className="[scrollbar-gutter:stable] overflow-x-hidden "
-    >
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground transition-colors duration-300`}
+    <ClerkProvider>
+      <html
+        lang="en"
         suppressHydrationWarning
+        className="[scrollbar-gutter:stable] overflow-x-hidden "
       >
-        <div className="main-bg main-bg-light"></div>
-        <div className="main-bg main-bg-dark"></div>
-        <Providers>
-          <Navbar />
-          <Container className="py-10">{children}</Container>
-        </Providers>
-      </body>
-    </html>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground transition-colors duration-300`}
+          suppressHydrationWarning
+        >
+          <div className="main-bg main-bg-light"></div>
+          <div className="main-bg main-bg-dark"></div>
+          <Providers>
+            <Navbar />
+            <Container className="py-10">{children}</Container>
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
