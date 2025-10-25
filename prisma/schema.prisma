@@ -26,6 +26,7 @@ model Product{
   featured Boolean
   price Int
   co2 Float
+  description String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   clerkId String

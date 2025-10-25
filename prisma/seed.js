@@ -139,6 +139,7 @@ function normalizeOriginalToProductShape(original) {
     clerkId: 'clerkId',
     image: undefined,
     featured: false,
+    description: undefined,
   };
   return base;
 }
@@ -183,6 +184,49 @@ async function copyAndResizeImage(absSrcPath, preferredName) {
   return `/images/${finalName}`;
 }
 
+/** 生成 80~120 單字的 lorem-style description */
+function generateLoremDescription(minWords = 80, maxWords = 120) {
+  const loremBase = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+    Integer euismod, augue id cursus sagittis, libero nulla hendrerit lacus,
+    a imperdiet augue sem ac justo. Sed facilisis, risus non tincidunt pulvinar,
+    felis elit cursus nulla, eget facilisis leo nunc vitae lectus.
+    Praesent vel lectus ut nisl volutpat egestas.
+    Duis vitae magna in nulla consectetur porta sit amet nec eros.
+    Morbi eget vestibulum neque. Aenean ac tincidunt justo.
+    Aliquam erat volutpat. Vivamus ac massa et mi sagittis venenatis.
+    Quisque luctus, felis nec efficitur hendrerit, mi dolor pretium velit,
+    ut aliquam orci nunc ut elit. Proin id dignissim tortor.
+    Vestibulum eget lectus a mauris lacinia sollicitudin.
+    Ut tristique, sapien nec porta tincidunt, justo orci pretium velit,
+    at sodales risus sem eget nulla. Nullam at mauris et nulla interdum fermentum.
+    Sed suscipit justo et magna porttitor, vel pretium neque malesuada.`;
+
+  // 切成單字
+  const words = loremBase.replace(/[.,]/g, '').split(/\s+/).filter(Boolean);
+
+  const wordCount =
+    Math.floor(Math.random() * (maxWords - minWords + 1)) + minWords;
+
+  // 循環取詞組成段落
+  let description = [];
+  for (let i = 0; i < wordCount; i++) {
+    const w = words[i % words.length];
+    description.push(w);
+  }
+
+  // 每約 12~18 個單字插入句號
+  const text = description
+    .map((w, i) => {
+      const end =
+        (i + 1) % (12 + Math.floor(Math.random() * 6)) === 0 ? '. ' : ' ';
+      return w + end;
+    })
+    .join('');
+
+  // 開頭首字大寫
+  return text.charAt(0).toUpperCase() + text.slice(1).trim();
+}
+
 async function main() {
   console.log('🔎 Scanning image tree:', IMAGE_SOURCE_DIR);
   const imgIndex = buildImageIndexByStem(IMAGE_SOURCE_DIR);
@@ -222,6 +266,7 @@ async function main() {
     //補充
     cleaned.featured = created < 5;
     cleaned.name = `${cleaned.bauteil_gruner}-${cleaned.breite}x${cleaned.hoehe}x${cleaned.tiefe}`;
+    cleaned.description = generateLoremDescription();
 
     // 6) 寫入 DB
     await prisma.product.create({ data: cleaned });
