@@ -1,5 +1,5 @@
 import FormInput from '@/components/form/FormInput';
-import SubmitButton from '@/components/form/Buttons';
+import { SubmitButton } from '@/components/form/Buttons';
 import FormContainer from '@/components/form/FormContainer';
 import { createProductAction } from '@/utils/actions';
 import ImageInput from '@/components/form/ImageInput';
@@ -163,6 +163,7 @@ function CreateProductPage() {
               label="featured"
               defaultChecked={featured}
             />
+            <ImageInput />
 
             {/* 敘述（整欄）*/}
             <div className="md:col-span-2">
