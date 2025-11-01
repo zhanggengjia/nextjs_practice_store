@@ -7,6 +7,7 @@ type CheckboxInputProps = {
   label: string;
   defaultChecked?: boolean;
 };
+console.log('here');
 
 function CheckboxInput({
   name,
