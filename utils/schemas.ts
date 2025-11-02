@@ -1,4 +1,4 @@
-import { z, ZodObject, ZodType } from 'zod';
+import { z, ZodType } from 'zod';
 
 export const productSchema = z.object({
   // 基本欄位

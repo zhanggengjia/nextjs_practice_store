@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
 import FavoriteToggleButton from './FavoriteToggleButton';
+import { toImageSrc } from '@/lib/image-url';
 
 function ProductsGrid({ products }: { products: Product[] }) {
   return (
@@ -12,6 +13,7 @@ function ProductsGrid({ products }: { products: Product[] }) {
         const { name, price, image } = product;
         const productId = product.id;
         const dollarsAmount = formatCurrency(price);
+        const src = toImageSrc(image);
         return (
           <article key={productId} className="group relative">
             <Link href={`/products/${productId}`}>
@@ -19,7 +21,7 @@ function ProductsGrid({ products }: { products: Product[] }) {
                 <CardContent className="p-4">
                   <div className="relative h-64 md:h-48 rounded overflow-hidden">
                     <Image
-                      src={image}
+                      src={src}
                       alt={name}
                       fill
                       sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
+import { toImageSrc } from '@/lib/image-url';
 
 const HeroCarousel = async () => {
   const featuredProduct: Product[] = await fetchFeaturedProducts();
@@ -19,12 +20,13 @@ const HeroCarousel = async () => {
       <Carousel>
         <CarouselContent>
           {carouselImages.map((image, index) => {
+            const src = toImageSrc(image);
             return (
               <CarouselItem key={index}>
                 <Card>
                   <CardContent className="p-2">
                     <Image
-                      src={image}
+                      src={src}
                       alt="hero"
                       width={1920}
                       height={1080}

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { IconButton } from '@/components/form/Buttons';
 import FormContainer from '@/components/form/FormContainer';
+import { ReactNode } from 'react';
 
 async function ItemsPage() {
   const items = await fetchAdminProducts();
@@ -61,7 +62,10 @@ async function ItemsPage() {
   );
 }
 
-function DeleteProduct({ productId }: { productId: string }) {
+// 因為表單送出時的 formData 不會包含 productId，
+// 所以使用 bind() 將 productId 預先綁定到 deleteProductAction，
+// 讓伺服器端能取得要刪除的產品 ID。
+function DeleteProduct({ productId }: { productId: string }): ReactNode {
   const deleteProduct = deleteProductAction.bind(null, { productId });
   return (
     <FormContainer action={deleteProduct}>

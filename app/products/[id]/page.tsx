@@ -5,6 +5,7 @@ import { formatCurrency } from '@/utils/format';
 import FavoriteToggleButton from '@/components/products/FavoriteToggleButton';
 import AddToCart from '@/components/single-product/AddToCart';
 import ProductRating from '@/components/single-product/ProductRating';
+import { toImageSrc } from '@/lib/image-url';
 
 async function SingleProductPage({
   params,
@@ -32,6 +33,7 @@ async function SingleProductPage({
     co2,
     description,
   } = product;
+  const src = toImageSrc(image);
   const dollarsAmount = formatCurrency(price);
   return (
     <section>
@@ -40,7 +42,7 @@ async function SingleProductPage({
         <div>
           <div className="relative w-full aspect-[4/3]">
             <Image
-              src={image}
+              src={src}
               alt={name}
               fill
               sizes="(max-width:768px) 100vw,(max-width:1200px) 50vw, 33vw"
