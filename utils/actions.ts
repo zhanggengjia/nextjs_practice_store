@@ -6,10 +6,11 @@ import { imageSchema, productSchema, validateWithZodSchema } from './schemas';
 import { deleteImage, uploadImage } from './supabase';
 import { revalidatePath } from 'next/cache';
 
-const renderError = (error: unknown): { message: string } => {
+const renderError = (error: unknown): { message: string; success: boolean } => {
   console.log(error);
   return {
-    message: error instanceof Error ? error.message : 'An error occurred',
+    success: false,
+    message: error instanceof Error ? error.message : 'Unknown error',
   };
 };
 
