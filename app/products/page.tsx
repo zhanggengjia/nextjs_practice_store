@@ -6,7 +6,7 @@ async function ProductsPage({
   searchParams: Promise<{ layout?: string; search?: string }>;
 }) {
   const params = await searchParams;
-  const layout = params.layout || 'grid';
+  const layout = params.layout || 'gridTest';
   const search = params.search || '';
   return (
     <>

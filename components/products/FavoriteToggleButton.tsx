@@ -1,11 +1,27 @@
-import { Button } from '../ui/button';
-import { FaHeart } from 'react-icons/fa';
+'use client';
 
-function FavoriteToggleButton({ productId }: { productId: string }) {
+import { SignedIn, SignedOut } from '@clerk/nextjs';
+import { CardSignInButton } from '../form/Buttons';
+import FavoriteToggleForm from '../form/FavoriteToggleForm';
+
+type Props = {
+  productId: string;
+  initialFavoriteId: string | null;
+};
+
+function FavoriteToggleButton({ productId, initialFavoriteId }: Props) {
   return (
-    <Button size="icon" variant="outline" className="p-2 cursor-pointer">
-      <FaHeart />
-    </Button>
+    <>
+      <SignedOut>
+        <CardSignInButton />
+      </SignedOut>
+      <SignedIn>
+        <FavoriteToggleForm
+          favoriteId={initialFavoriteId}
+          productId={productId}
+        />
+      </SignedIn>
+    </>
   );
 }
 

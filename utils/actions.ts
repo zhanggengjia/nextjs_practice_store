@@ -186,3 +186,111 @@ export const updateProductImageAction = async (
     return renderError(error);
   }
 };
+
+export const fetchFavoriteId = async ({ productId }: { productId: string }) => {
+  const user = await getAuthUser();
+  const favorite = await db.favorite.findFirst({
+    where: {
+      productId,
+      clerkId: user.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+  return favorite?.id || null;
+};
+
+export const toggleFavoriteAction = async (
+  prevState: {
+    productId: string;
+    favoriteId: string | null;
+    pathname: string;
+  },
+  _formData: FormData
+) => {
+  const user = await getAuthUser();
+  const { productId, favoriteId, pathname } = prevState;
+  try {
+    if (favoriteId) {
+      await db.favorite.delete({
+        where: {
+          id: favoriteId,
+        },
+      });
+    } else {
+      await db.favorite.create({
+        data: {
+          productId,
+          clerkId: user.id,
+        },
+      });
+    }
+    revalidatePath(pathname);
+    return {
+      message: favoriteId ? 'Removed from Favorites' : 'Added to Favorites',
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+import { Prisma } from '@prisma/client';
+
+const PAGE_SIZE = 12;
+
+export const fetchProductsPage = async ({
+  search,
+  page,
+}: {
+  search: string;
+  page: number;
+}) => {
+  const { userId } = await auth();
+  const clerkId = userId ?? null;
+
+  // ✔ 讓 where 是 ProductWhereInput | undefined
+  const where: Prisma.ProductWhereInput | undefined = search
+    ? {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: 'insensitive' as const, // 關鍵：保持 literal type
+            },
+          },
+          {
+            material: {
+              contains: search,
+              mode: 'insensitive' as const,
+            },
+          },
+        ],
+      }
+    : undefined;
+
+  const [products, totalProducts] = await Promise.all([
+    db.product.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
+      include: clerkId
+        ? {
+            favorites: {
+              where: { clerkId },
+              select: { id: true },
+            },
+          }
+        : undefined,
+    }),
+    db.product.count({ where }),
+  ]);
+
+  const mapped = products.map((p: any) => ({
+    ...p,
+    favoriteId: clerkId ? p.favorites?.[0]?.id ?? null : null,
+  }));
+
+  return { products: mapped, totalProducts, pageSize: PAGE_SIZE };
+};

@@ -1,9 +1,9 @@
-import ProductsGrid from './ProductsGrid';
+import ProductsGridTest from './ProductsGridTest';
 import ProductsList from './ProductsList';
 import { LuLayoutGrid, LuList } from 'react-icons/lu';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
-import { fetchAllProducts } from '@/utils/actions';
+import { fetchProductsPage } from '@/utils/actions';
 import Link from 'next/link';
 
 async function ProductsContainer({
@@ -13,9 +13,13 @@ async function ProductsContainer({
   layout: string;
   search: string;
 }) {
-  const products = await fetchAllProducts({ search });
-  const totalProducts = products.length;
+  const page = 1;
+  const { products, totalProducts, pageSize } = await fetchProductsPage({
+    search,
+    page,
+  });
   const searchTerm = search ? `&search=${search}` : '';
+
   return (
     <>
       <section>
@@ -25,11 +29,11 @@ async function ProductsContainer({
           </h4>
           <div className="flex gap-x-4">
             <Button
-              variant={layout === 'grid' ? 'default' : 'ghost'}
+              variant={layout === 'gridTest' ? 'default' : 'ghost'}
               size="icon"
               asChild
             >
-              <Link href={`/products?layout=grid${searchTerm}`}>
+              <Link href={`/products?layout=gridTest${searchTerm}`}>
                 <LuLayoutGrid />
               </Link>
             </Button>
@@ -51,8 +55,13 @@ async function ProductsContainer({
           <h5 className="text-2xl mt-16">
             Sorry, no products matched your search...
           </h5>
-        ) : layout == 'grid' ? (
-          <ProductsGrid products={products} />
+        ) : layout === 'gridTest' ? (
+          <ProductsGridTest
+            initialProducts={products}
+            search={search}
+            totalProducts={totalProducts}
+            pageSize={pageSize}
+          />
         ) : (
           <ProductsList products={products} />
         )}
