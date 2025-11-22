@@ -1,4 +1,4 @@
-import ProductsGridTest from './ProductsGridTest';
+import ProductsGrid from './ProductsGrid';
 import ProductsList from './ProductsList';
 import { LuLayoutGrid, LuList } from 'react-icons/lu';
 import { Button } from '../ui/button';
@@ -29,11 +29,11 @@ async function ProductsContainer({
           </h4>
           <div className="flex gap-x-4">
             <Button
-              variant={layout === 'gridTest' ? 'default' : 'ghost'}
+              variant={layout === 'grid' ? 'default' : 'ghost'}
               size="icon"
               asChild
             >
-              <Link href={`/products?layout=gridTest${searchTerm}`}>
+              <Link href={`/products?layout=grid${searchTerm}`}>
                 <LuLayoutGrid />
               </Link>
             </Button>
@@ -55,15 +55,20 @@ async function ProductsContainer({
           <h5 className="text-2xl mt-16">
             Sorry, no products matched your search...
           </h5>
-        ) : layout === 'gridTest' ? (
-          <ProductsGridTest
+        ) : layout === 'grid' ? (
+          <ProductsGrid
             initialProducts={products}
             search={search}
             totalProducts={totalProducts}
             pageSize={pageSize}
           />
         ) : (
-          <ProductsList products={products} />
+          <ProductsList
+            initialProducts={products}
+            search={search}
+            totalProducts={totalProducts}
+            pageSize={pageSize}
+          />
         )}
       </div>
     </>

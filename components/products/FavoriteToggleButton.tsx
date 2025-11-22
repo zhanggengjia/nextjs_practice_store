@@ -1,28 +1,64 @@
 'use client';
 
-import { SignedIn, SignedOut } from '@clerk/nextjs';
-import { CardSignInButton } from '../form/Buttons';
-import FavoriteToggleForm from '../form/FavoriteToggleForm';
+import { useState, useTransition } from 'react';
+import { usePathname } from 'next/navigation';
+import { toggleFavoriteAction } from '@/utils/actions';
+import { FaHeart, FaRegHeart } from 'react-icons/fa6';
+import { TbReload } from 'react-icons/tb';
 
 type Props = {
   productId: string;
   initialFavoriteId: string | null;
 };
 
-function FavoriteToggleButton({ productId, initialFavoriteId }: Props) {
+type ToggleResult = {
+  message: string;
+  favoriteId: string | null;
+};
+
+export default function FavoriteToggleButton({
+  productId,
+  initialFavoriteId,
+}: Props) {
+  const pathname = usePathname();
+
+  // 本地 optimistic 狀態
+  const [favoriteId, setFavoriteId] = useState<string | null>(
+    initialFavoriteId
+  );
+  const [isPending, startTransition] = useTransition();
+
+  const isFavorite = !!favoriteId;
+
+  const handleClick = () => {
+    // 先樂觀更新
+    setFavoriteId((prev) => (prev ? null : 'temp-id'));
+
+    startTransition(async () => {
+      const res = (await toggleFavoriteAction({
+        productId,
+        pathname,
+      })) as ToggleResult;
+
+      // 以 server 實際回傳為準（包含真正的 favoriteId 或 null）
+      setFavoriteId(res.favoriteId);
+    });
+  };
+
   return (
-    <>
-      <SignedOut>
-        <CardSignInButton />
-      </SignedOut>
-      <SignedIn>
-        <FavoriteToggleForm
-          favoriteId={initialFavoriteId}
-          productId={productId}
-        />
-      </SignedIn>
-    </>
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isPending}
+      className="flex h-10 w-10 items-center justify-center rounded-full bg-background/90 shadow-md"
+    >
+      {isPending ? (
+        <TbReload className="h-5 w-5 animate-spin" />
+      ) : isFavorite ? (
+        <FaHeart className="h-5 w-5 text-red-500" />
+      ) : (
+        <FaRegHeart className="h-5 w-5" />
+      )}
+    </button>
   );
 }
-
-export default FavoriteToggleButton;

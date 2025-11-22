@@ -1,22 +1,65 @@
 // app/api/products/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { fetchProductsPage } from '@/utils/actions';
+import { NextResponse } from 'next/server';
+import db from '@/utils/db';
+import { getAuthUser } from '@/utils/actions';
+import { Prisma } from '@prisma/client';
 
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const search = searchParams.get('search') ?? '';
+
   const page = Number(searchParams.get('page') ?? '1');
-  const pageSizeParam = Number(searchParams.get('pageSize') ?? '0');
+  const pageSize = Number(searchParams.get('pageSize') ?? '12');
+  const search = searchParams.get('search') ?? '';
 
-  const { products, totalProducts, pageSize } = await fetchProductsPage({
-    search,
-    page,
-  });
+  const user = await getAuthUser(); // 這裡拿到目前登入的使用者
 
-  // 讓前端可以改 pageSize 但不一定要一樣，先以後端為主
+  const where: Prisma.ProductWhereInput | undefined = search
+    ? {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: 'insensitive' as const, // 關鍵：保持 literal type
+            },
+          },
+          {
+            material: {
+              contains: search,
+              mode: 'insensitive' as const,
+            },
+          },
+        ],
+      }
+    : {};
+
+  const [products, totalProducts] = await Promise.all([
+    db.product.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        favorites: {
+          where: {
+            clerkId: user.id,
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    }),
+    db.product.count({ where }),
+  ]);
+
+  // 統一變成 ProductWithFavoriteId 結構
+  const productsWithFavoriteId = products.map((p) => ({
+    ...p,
+    favoriteId: p.favorites[0]?.id ?? null,
+  }));
+
   return NextResponse.json({
-    products,
+    products: productsWithFavoriteId,
     totalProducts,
-    pageSize: pageSizeParam || pageSize,
   });
 }

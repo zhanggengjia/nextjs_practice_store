@@ -5,6 +5,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { imageSchema, productSchema, validateWithZodSchema } from './schemas';
 import { deleteImage, uploadImage } from './supabase';
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
 
 const renderError = (error: unknown): { message: string; success: boolean } => {
   console.log(error);
@@ -14,7 +15,7 @@ const renderError = (error: unknown): { message: string; success: boolean } => {
   };
 };
 
-const getAuthUser = async () => {
+export const getAuthUser = async () => {
   const user = await currentUser();
   if (!user) {
     throw new Error('You must be logged in to access this route');
@@ -201,55 +202,19 @@ export const fetchFavoriteId = async ({ productId }: { productId: string }) => {
   return favorite?.id || null;
 };
 
-export const toggleFavoriteAction = async (
-  prevState: {
-    productId: string;
-    favoriteId: string | null;
-    pathname: string;
-  },
-  _formData: FormData
-) => {
-  const user = await getAuthUser();
-  const { productId, favoriteId, pathname } = prevState;
-  try {
-    if (favoriteId) {
-      await db.favorite.delete({
-        where: {
-          id: favoriteId,
-        },
-      });
-    } else {
-      await db.favorite.create({
-        data: {
-          productId,
-          clerkId: user.id,
-        },
-      });
-    }
-    revalidatePath(pathname);
-    return {
-      message: favoriteId ? 'Removed from Favorites' : 'Added to Favorites',
-    };
-  } catch (error) {
-    return renderError(error);
-  }
+type FetchProductsPageArgs = {
+  search?: string;
+  page: number;
+  pageSize?: number;
 };
 
-import { Prisma } from '@prisma/client';
-
-const PAGE_SIZE = 12;
-
-export const fetchProductsPage = async ({
-  search,
+export async function fetchProductsPage({
+  search = '',
   page,
-}: {
-  search: string;
-  page: number;
-}) => {
-  const { userId } = await auth();
-  const clerkId = userId ?? null;
+  pageSize = 12,
+}: FetchProductsPageArgs) {
+  const user = await getAuthUser();
 
-  // ✔ 讓 where 是 ProductWhereInput | undefined
   const where: Prisma.ProductWhereInput | undefined = search
     ? {
         OR: [
@@ -267,30 +232,81 @@ export const fetchProductsPage = async ({
           },
         ],
       }
-    : undefined;
+    : {};
 
   const [products, totalProducts] = await Promise.all([
     db.product.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      take: PAGE_SIZE,
-      skip: (page - 1) * PAGE_SIZE,
-      include: clerkId
-        ? {
-            favorites: {
-              where: { clerkId },
-              select: { id: true },
-            },
-          }
-        : undefined,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        favorites: {
+          where: { clerkId: user.id },
+          select: { id: true },
+        },
+      },
     }),
     db.product.count({ where }),
   ]);
 
-  const mapped = products.map((p: any) => ({
+  const productsWithFavoriteId = products.map((p) => ({
     ...p,
-    favoriteId: clerkId ? p.favorites?.[0]?.id ?? null : null,
+    favoriteId: p.favorites[0]?.id ?? null,
   }));
 
-  return { products: mapped, totalProducts, pageSize: PAGE_SIZE };
+  return {
+    products: productsWithFavoriteId,
+    totalProducts,
+    pageSize,
+  };
+}
+
+type ToggleFavoriteArgs = {
+  productId: string;
+  pathname: string;
 };
+
+type ToggleResult = {
+  message: string;
+  favoriteId: string | null;
+};
+
+export async function toggleFavoriteAction({
+  productId,
+  pathname,
+}: ToggleFavoriteArgs): Promise<ToggleResult> {
+  const user = await getAuthUser();
+
+  const existing = await db.favorite.findFirst({
+    where: {
+      productId,
+      clerkId: user.id,
+    },
+  });
+
+  let favoriteId: string | null;
+
+  if (existing) {
+    await db.favorite.delete({
+      where: { id: existing.id },
+    });
+    favoriteId = null;
+  } else {
+    const created = await db.favorite.create({
+      data: {
+        productId,
+        clerkId: user.id,
+      },
+    });
+    favoriteId = created.id;
+  }
+
+  // 讓 /products 這類 server component 下次載入時資料是新的
+  revalidatePath(pathname);
+
+  return {
+    message: existing ? 'Removed from favorites' : 'Added to favorites',
+    favoriteId,
+  };
+}
