@@ -22,6 +22,14 @@ export default function FavoriteToggleButton({
   productId,
   initialFavoriteId,
 }: Props) {
+  const pathname = usePathname();
+
+  // 本地 optimistic 狀態
+  const [favoriteId, setFavoriteId] = useState<string | null>(
+    initialFavoriteId
+  );
+  const [isPending, startTransition] = useTransition();
+
   // ✅ 用 Clerk 的 client hook，而不是 server-only currentUser
   const { isLoaded, isSignedIn } = useUser();
 
@@ -32,14 +40,6 @@ export default function FavoriteToggleButton({
   if (!isSignedIn) {
     return <CardSignInButton />;
   }
-
-  const pathname = usePathname();
-
-  // 本地 optimistic 狀態
-  const [favoriteId, setFavoriteId] = useState<string | null>(
-    initialFavoriteId
-  );
-  const [isPending, startTransition] = useTransition();
 
   const isFavorite = !!favoriteId;
 
