@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import db from '@/utils/db';
 import { auth } from '@clerk/nextjs/server';
-import { Prisma } from '@prisma/client';
+import { Prisma, Product } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -11,31 +11,28 @@ export async function GET(req: NextRequest) {
   const pageSize = Number(searchParams.get('pageSize') ?? '12');
   const search = searchParams.get('search') ?? '';
 
-  // ✔ 不用 getAuthUser()，因為那會在未登入時丟錯
   const { userId } = await auth();
   const clerkId = userId ?? null;
 
-  // ✔ where 條件
   const where: Prisma.ProductWhereInput | undefined = search
     ? {
         OR: [
           {
             name: {
               contains: search,
-              mode: 'insensitive' as const,
+              mode: 'insensitive',
             },
           },
           {
             material: {
               contains: search,
-              mode: 'insensitive' as const,
+              mode: 'insensitive',
             },
           },
         ],
       }
-    : {};
+    : undefined;
 
-  // ✔ 有登入才 include favorites
   const [products, totalProducts] = await Promise.all([
     db.product.findMany({
       where,
@@ -54,11 +51,35 @@ export async function GET(req: NextRequest) {
     db.product.count({ where }),
   ]);
 
-  // ✔ 統一 favoriteId 格式
-  const productsWithFavoriteId = products.map((p: any) => ({
-    ...p,
-    favoriteId: clerkId ? p.favorites?.[0]?.id ?? null : null,
-  }));
+  // ✅ 定義清楚「有 favorites 的型別」
+  type ProductWithFavorites = Prisma.ProductGetPayload<{
+    include: {
+      favorites: {
+        select: { id: true };
+      };
+    };
+  }>;
+
+  // ✅ 統一 output 型別：每筆 product 多一個 favoriteId
+  let productsWithFavoriteId: Array<Product & { favoriteId: string | null }>;
+
+  if (clerkId) {
+    // 已登入：products 實際上是 ProductWithFavorites[]
+    const typed = products as ProductWithFavorites[];
+
+    productsWithFavoriteId = typed.map((p) => ({
+      ...p,
+      favoriteId: p.favorites[0]?.id ?? null,
+    }));
+  } else {
+    // 未登入：products 就是 Product[]
+    const typed = products as Product[];
+
+    productsWithFavoriteId = typed.map((p) => ({
+      ...p,
+      favoriteId: null,
+    }));
+  }
 
   return NextResponse.json({
     products: productsWithFavoriteId,
