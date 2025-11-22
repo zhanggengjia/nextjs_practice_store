@@ -1,8 +1,12 @@
 // app/api/products/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import db from '@/utils/db';
-import { auth } from '@clerk/nextjs/server';
-import { Prisma, Product } from '@prisma/client';
+import { auth, currentUser } from '@clerk/nextjs/server';
+import type { Prisma, Product } from '@prisma/client';
+
+type ProductWithFavoriteId = Product & {
+  favoriteId: string | null;
+};
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -11,7 +15,9 @@ export async function GET(req: NextRequest) {
   const pageSize = Number(searchParams.get('pageSize') ?? '12');
   const search = searchParams.get('search') ?? '';
 
-  const { userId } = await auth();
+  // 🔹 Clerk 的 auth 在 App Router 是「同步」的，不要寫 await auth()
+  const user = await currentUser();
+  const userId = user?.id;
   const clerkId = userId ?? null;
 
   const where: Prisma.ProductWhereInput | undefined = search
@@ -51,35 +57,17 @@ export async function GET(req: NextRequest) {
     db.product.count({ where }),
   ]);
 
-  // ✅ 定義清楚「有 favorites 的型別」
-  type ProductWithFavorites = Prisma.ProductGetPayload<{
-    include: {
-      favorites: {
-        select: { id: true };
-      };
-    };
-  }>;
+  // 🔹 明確型別：products 可能帶 favorites，也可能沒有
+  type ProductWithMaybeFavorites = Product & {
+    favorites?: { id: string }[];
+  };
 
-  // ✅ 統一 output 型別：每筆 product 多一個 favoriteId
-  let productsWithFavoriteId: Array<Product & { favoriteId: string | null }>;
-
-  if (clerkId) {
-    // 已登入：products 實際上是 ProductWithFavorites[]
-    const typed = products as ProductWithFavorites[];
-
-    productsWithFavoriteId = typed.map((p) => ({
-      ...p,
-      favoriteId: p.favorites[0]?.id ?? null,
-    }));
-  } else {
-    // 未登入：products 就是 Product[]
-    const typed = products as Product[];
-
-    productsWithFavoriteId = typed.map((p) => ({
-      ...p,
-      favoriteId: null,
-    }));
-  }
+  const productsWithFavoriteId: ProductWithFavoriteId[] = (
+    products as ProductWithMaybeFavorites[]
+  ).map((p) => ({
+    ...p,
+    favoriteId: clerkId ? p.favorites?.[0]?.id ?? null : null,
+  }));
 
   return NextResponse.json({
     products: productsWithFavoriteId,
