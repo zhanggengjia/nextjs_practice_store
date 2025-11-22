@@ -6,7 +6,6 @@ import { toggleFavoriteAction } from '@/utils/actions';
 import { FaHeart, FaRegHeart } from 'react-icons/fa6';
 import { TbReload } from 'react-icons/tb';
 import { CardSignInButton } from '../form/Buttons';
-import { currentUser } from '@clerk/nextjs/server';
 import { useUser } from '@clerk/nextjs';
 
 type Props = {
