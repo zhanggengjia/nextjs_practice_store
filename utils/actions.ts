@@ -62,17 +62,28 @@ export const fetchAllProducts = async ({ search = '' }: { search: string }) => {
   });
 };
 
-export const fetchSingleProduct = async (productId: string) => {
+export async function fetchSingleProduct(id: string) {
+  const user = await getAuthUser();
+
   const product = await db.product.findUnique({
-    where: {
-      id: productId,
+    where: { id },
+    include: {
+      favorites: {
+        where: { clerkId: user.id },
+        select: { id: true },
+      },
     },
   });
+
   if (!product) {
-    redirect('/products');
+    throw new Error('Product not found');
   }
-  return product;
-};
+
+  return {
+    ...product,
+    favoriteId: product.favorites[0]?.id ?? null,
+  };
+}
 
 export const createProductAction = async (
   prevState: any,

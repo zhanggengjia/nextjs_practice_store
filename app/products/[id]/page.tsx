@@ -32,6 +32,7 @@ async function SingleProductPage({
     price,
     co2,
     description,
+    favoriteId,
   } = product;
   const src = toImageSrc(image);
   const dollarsAmount = formatCurrency(price);
@@ -55,7 +56,10 @@ async function SingleProductPage({
         <div>
           <div className="flex gap-x-8 items-center">
             <h1 className="capitalize text-3xl font-bold">{name}</h1>
-            <FavoriteToggleButton productId={id} />
+            <FavoriteToggleButton
+              productId={id}
+              initialFavoriteId={favoriteId}
+            />
           </div>
           <ProductRating productId={id} />
           <h4 className="text-xl mt-2">{ref_gebauede_geschoss}</h4>
