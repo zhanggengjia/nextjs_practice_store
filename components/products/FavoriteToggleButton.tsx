@@ -5,6 +5,9 @@ import { usePathname } from 'next/navigation';
 import { toggleFavoriteAction } from '@/utils/actions';
 import { FaHeart, FaRegHeart } from 'react-icons/fa6';
 import { TbReload } from 'react-icons/tb';
+import { CardSignInButton } from '../form/Buttons';
+import { currentUser } from '@clerk/nextjs/server';
+import { useUser } from '@clerk/nextjs';
 
 type Props = {
   productId: string;
@@ -20,6 +23,17 @@ export default function FavoriteToggleButton({
   productId,
   initialFavoriteId,
 }: Props) {
+  // ✅ 用 Clerk 的 client hook，而不是 server-only currentUser
+  const { isLoaded, isSignedIn } = useUser();
+
+  // 還在載入 Clerk 狀態時，可以先不顯示（或顯示 skeleton）
+  if (!isLoaded) return null;
+
+  // ❗ 未登入：顯示 SignIn Button，而不是 favorite 按鈕
+  if (!isSignedIn) {
+    return <CardSignInButton />;
+  }
+
   const pathname = usePathname();
 
   // 本地 optimistic 狀態

@@ -63,25 +63,37 @@ export const fetchAllProducts = async ({ search = '' }: { search: string }) => {
 };
 
 export async function fetchSingleProduct(id: string) {
-  const user = await getAuthUser();
+  let userId: string | null = null;
+  try {
+    const user = await getAuthUser();
+    userId = user.id;
+  } catch {
+    userId = null;
+  }
 
-  const product = await db.product.findUnique({
-    where: { id },
-    include: {
-      favorites: {
-        where: { clerkId: user.id },
-        select: { id: true },
-      },
-    },
-  });
+  const product = await (userId
+    ? db.product.findUnique({
+        where: { id },
+        include: {
+          favorites: {
+            where: { clerkId: userId },
+            select: { id: true },
+          },
+        },
+      })
+    : db.product.findUnique({
+        where: { id },
+      }));
 
   if (!product) {
     throw new Error('Product not found');
   }
 
+  const anyProduct = product as any;
+
   return {
     ...product,
-    favoriteId: product.favorites[0]?.id ?? null,
+    favoriteId: userId ? anyProduct.favorites?.[0]?.id ?? null : null,
   };
 }
 
@@ -224,7 +236,13 @@ export async function fetchProductsPage({
   page,
   pageSize = 12,
 }: FetchProductsPageArgs) {
-  const user = await getAuthUser();
+  let userId: string | null = null;
+  try {
+    const user = await getAuthUser();
+    userId = user.id;
+  } catch {
+    userId = null;
+  }
 
   const where: Prisma.ProductWhereInput | undefined = search
     ? {
@@ -246,24 +264,31 @@ export async function fetchProductsPage({
     : {};
 
   const [products, totalProducts] = await Promise.all([
-    db.product.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      include: {
-        favorites: {
-          where: { clerkId: user.id },
-          select: { id: true },
-        },
-      },
-    }),
+    userId
+      ? db.product.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          include: {
+            favorites: {
+              where: { clerkId: userId },
+              select: { id: true },
+            },
+          },
+        })
+      : db.product.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
     db.product.count({ where }),
   ]);
 
-  const productsWithFavoriteId = products.map((p) => ({
+  const productsWithFavoriteId = products.map((p: any) => ({
     ...p,
-    favoriteId: p.favorites[0]?.id ?? null,
+    favoriteId: userId ? p.favorites?.[0]?.id ?? null : null,
   }));
 
   return {
