@@ -1,4 +1,6 @@
+import LoadingContainer from '@/components/global/LoadingContainer';
 import ProductsContainer from '@/components/products/ProductsContainer';
+import { Suspense } from 'react';
 
 async function ProductsPage({
   searchParams,
@@ -10,7 +12,9 @@ async function ProductsPage({
   const search = params.search || '';
   return (
     <>
-      <ProductsContainer layout={layout} search={search} />
+      <Suspense fallback={<LoadingContainer />}>
+        <ProductsContainer layout={layout} search={search} />
+      </Suspense>
     </>
   );
 }
