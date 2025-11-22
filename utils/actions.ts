@@ -5,7 +5,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { imageSchema, productSchema, validateWithZodSchema } from './schemas';
 import { deleteImage, uploadImage } from './supabase';
 import { revalidatePath } from 'next/cache';
-import { Prisma } from '@prisma/client';
+import { Prisma, Product } from '@prisma/client';
 
 const renderError = (error: unknown): { message: string; success: boolean } => {
   console.log(error);
@@ -39,13 +39,47 @@ export const fetchAdminProducts = async () => {
   return products;
 };
 
-export const fetchFeaturedProducts = async () => {
+type ProductWithFavoriteId = Product & { favoriteId: string | null };
+
+export const fetchFeaturedProducts = async (): Promise<
+  ProductWithFavoriteId[]
+> => {
+  // Clerk 的 auth() 在 App Router 是同步，不要 await
+  const { userId } = await auth();
+  const clerkId = userId ?? null;
+
+  // ✔ featured 條件
+  const where: Prisma.ProductWhereInput = {
+    featured: true,
+  };
+
+  // ✔ 查詢 featured products
   const products = await db.product.findMany({
-    where: {
-      featured: true,
-    },
+    where,
+    orderBy: { createdAt: 'desc' },
+    include: clerkId
+      ? {
+          favorites: {
+            where: { clerkId },
+            select: { id: true },
+          },
+        }
+      : undefined,
   });
-  return products;
+
+  // ✔ 統一路徑：favoriteId
+  type ProductWithMaybeFavorites = Product & {
+    favorites?: { id: string }[];
+  };
+
+  const productsWithFavoriteId: ProductWithFavoriteId[] = (
+    products as ProductWithMaybeFavorites[]
+  ).map((p) => ({
+    ...p,
+    favoriteId: clerkId ? p.favorites?.[0]?.id ?? null : null,
+  }));
+
+  return productsWithFavoriteId;
 };
 
 export const fetchAllProducts = async ({ search = '' }: { search: string }) => {
@@ -346,3 +380,27 @@ export async function toggleFavoriteAction({
     favoriteId,
   };
 }
+
+type FavoriteWithProduct = Prisma.FavoriteGetPayload<{
+  include: { product: true };
+}>;
+
+export const fetchUserFavorites = async (): Promise<FavoriteWithProduct[]> => {
+  const { userId } = await auth();
+
+  if (!userId) {
+    // 這頁本來就應該只有登入才能看，可以丟錯或改成 redirect
+    throw new Error('You must be logged in to view favorites');
+  }
+
+  const favorites = await db.favorite.findMany({
+    where: {
+      clerkId: userId,
+    },
+    include: {
+      product: true,
+    },
+  });
+
+  return favorites;
+};

@@ -1,18 +1,18 @@
 // components/home/FeaturedProducts.tsx
-import { fetchProductsPage } from '@/utils/actions';
+import { fetchFeaturedProducts, fetchProductsPage } from '@/utils/actions';
 import ProductsGrid from '@/components/products/ProductsGrid';
+import { Product } from '@prisma/client';
 // import ProductsList from '@/components/products/ProductsList';
 
 export default async function FeaturedProducts() {
   // 拿第一頁產品，pageSize 可以自己決定
-  const { products } = await fetchProductsPage({
-    search: '',
-    page: 1,
-    pageSize: 12, // 或 6、8 都可以
-  });
+  // const { products } = await fetchProductsPage({
+  //   search: '',
+  //   page: 1,
+  //   pageSize: 12, // 或 6、8 都可以
+  // });
 
-  // 例如只在首頁顯示前 6 個
-  const featured = products.slice(0, 6);
+  const featured = await fetchFeaturedProducts();
 
   return (
     <section className="mt-16">

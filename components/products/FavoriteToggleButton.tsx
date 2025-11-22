@@ -10,7 +10,7 @@ import { useUser } from '@clerk/nextjs';
 
 type Props = {
   productId: string;
-  initialFavoriteId: string | null;
+  initialFavoriteId?: string | null;
 };
 
 type ToggleResult = {
@@ -20,7 +20,7 @@ type ToggleResult = {
 
 export default function FavoriteToggleButton({
   productId,
-  initialFavoriteId,
+  initialFavoriteId = null,
 }: Props) {
   const pathname = usePathname();
 

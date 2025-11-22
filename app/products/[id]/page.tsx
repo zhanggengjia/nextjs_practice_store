@@ -6,6 +6,7 @@ import FavoriteToggleButton from '@/components/products/FavoriteToggleButton';
 import AddToCart from '@/components/single-product/AddToCart';
 import ProductRating from '@/components/single-product/ProductRating';
 import { toImageSrc } from '@/lib/image-url';
+import ShareButton from '@/components/single-product/ShareButton';
 
 async function SingleProductPage({
   params,
@@ -60,6 +61,7 @@ async function SingleProductPage({
               productId={id}
               initialFavoriteId={favoriteId}
             />
+            <ShareButton name={product.name} productId={id} />
           </div>
           <ProductRating productId={id} />
           <h4 className="text-xl mt-2">{ref_gebauede_geschoss}</h4>
