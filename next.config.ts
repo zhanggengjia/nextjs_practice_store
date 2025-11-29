@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         hostname: SUPABASE_HOST,
         pathname: '/storage/v1/object/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
     ],
   },
 };

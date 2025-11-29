@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { usePathname } from 'next/navigation';
 import { toggleFavoriteAction } from '@/utils/actions';
 import { FaHeart, FaRegHeart } from 'react-icons/fa6';
@@ -30,13 +30,27 @@ export default function FavoriteToggleButton({
   );
   const [isPending, startTransition] = useTransition();
 
-  // ✅ 用 Clerk 的 client hook，而不是 server-only currentUser
+  // ✅ 只讓真正「掛載後」才去根據 useUser 決定要顯示什麼
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Clerk hook – 但第一次 render 不會用它來決定 JSX
   const { isLoaded, isSignedIn } = useUser();
 
-  // 還在載入 Clerk 狀態時，可以先不顯示（或顯示 skeleton）
-  if (!isLoaded) return null;
+  // 🔑 重點：SSR & Client 第一次 render 都回傳 null
+  // -> DOM 完全一致，不會 hydration mismatch
+  if (!isMounted) {
+    return null;
+  }
 
-  // ❗ 未登入：顯示 SignIn Button，而不是 favorite 按鈕
+  // 這之後就只會在 client 上運作，不牽涉 hydration
+  if (!isLoaded) {
+    // 你可以改成 skeleton / spinner，如果想要
+    return null;
+  }
+
   if (!isSignedIn) {
     return <CardSignInButton />;
   }

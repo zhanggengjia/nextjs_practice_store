@@ -105,19 +105,19 @@ function ProductsGrid({
           return (
             <article key={productId} className="group relative">
               <Link href={`/products/${productId}`}>
-                <Card className="transform group-hover:shadow-xl transition-shadow duration-500 ">
-                  <CardContent className="pt-0!">
-                    <div className="relative h-64 w-full mb-4">
+                <Card className="transform group-hover:shadow-xl transition-shadow duration-500 !pt-0">
+                  <CardContent className="!p-4">
+                    <div className="relative h-64 md:h-48 rounded overflow-hidden">
                       <Image
                         src={src}
                         alt={name}
                         fill
                         sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
-                        className="rounded-md object-cover"
+                        className="rounded w-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                         priority
                       />
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pt-2">
                       <div>
                         <h2 className="text-lg font-semibold capitalize">
                           {name}
@@ -133,7 +133,7 @@ function ProductsGrid({
                   </CardContent>
                 </Card>
               </Link>
-              <div className="absolute top-7 right-7 z-10">
+              <div className="absolute top-7 right-7 z-5">
                 <FavoriteToggleButton
                   productId={productId}
                   initialFavoriteId={favoriteId}
