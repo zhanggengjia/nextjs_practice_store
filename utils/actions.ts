@@ -379,6 +379,7 @@ export async function toggleFavoriteAction({
 
   // 讓 /products 這類 server component 下次載入時資料是新的
   revalidatePath(pathname);
+  revalidatePath('/favorites');
 
   return {
     message: existing ? 'Removed from favorites' : 'Added to favorites',
@@ -457,6 +458,7 @@ export const fetchProductReviewsByUser = async () => {
         select: {
           image: true,
           name: true,
+          id: true,
         },
       },
     },
@@ -616,6 +618,9 @@ export const updateCart = async (cart: Cart) => {
     include: {
       product: true,
     },
+    orderBy: {
+      createdAt: 'asc',
+    },
   });
 
   let numItemsInCart = 0;
@@ -630,7 +635,7 @@ export const updateCart = async (cart: Cart) => {
   const shipping = cartTotal ? cart.shipping : 0;
   const orderTotal = cartTotal + tax + shipping;
 
-  await db.cart.update({
+  const currentCart = await db.cart.update({
     where: {
       id: cart.id,
     },
@@ -640,7 +645,9 @@ export const updateCart = async (cart: Cart) => {
       tax,
       orderTotal,
     },
+    include: includeProductClause,
   });
+  return { cartItems, currentCart };
 };
 
 export const addToCartAction = async (prevState: any, formData: FormData) => {
@@ -659,6 +666,61 @@ export const addToCartAction = async (prevState: any, formData: FormData) => {
   }
 };
 
-export const removeCartItemAction = async () => {};
+export const removeCartItemAction = async (
+  prevState: any,
+  formData: FormData
+) => {
+  const user = await getAuthUser();
+  try {
+    const cartItemId = formData.get('id') as string;
+    const cart = await fetchOrCreateCart({
+      userId: user.id,
+      errorOnFailure: true,
+    });
+    await db.cartItem.delete({
+      where: {
+        id: cartItemId,
+        cartId: cart.id,
+      },
+    });
 
-export const updateCartItemAction = async () => {};
+    await updateCart(cart);
+    revalidatePath('/cart');
+    return { message: 'Item removed from cart' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+export const updateCartItemAction = async ({
+  amount,
+  cartItemId,
+}: {
+  amount: number;
+  cartItemId: string;
+}) => {
+  const user = await getAuthUser();
+
+  try {
+    const cart = await fetchOrCreateCart({
+      userId: user.id,
+      errorOnFailure: true,
+    });
+    await db.cartItem.update({
+      where: {
+        id: cartItemId,
+        cartId: cart.id,
+      },
+      data: { amount },
+    });
+    await updateCart(cart);
+    revalidatePath('/cart');
+    return { message: 'cart updated' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+export const createOrderAction = async () => {
+  return { message: 'order sended' };
+};

@@ -15,6 +15,7 @@ const ProductReviews = async ({ productId }: { productId: string }) => {
             rating,
             image: authorImageUrl,
             name: authorName,
+            id: productId,
           };
           return <ReviewCard key={review.id} reviewInfo={reviewInfo} />;
         })}

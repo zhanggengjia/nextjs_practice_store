@@ -8,6 +8,7 @@ import { Card, CardContent } from '../ui/card';
 import { formatCurrency } from '@/utils/format';
 import FavoriteToggleButton from './FavoriteToggleButton';
 import { toImageSrc } from '@/lib/image-url';
+import { usePathname } from 'next/navigation';
 
 type ProductWithFavoriteId = Product & {
   favoriteId: string | null;
@@ -33,8 +34,18 @@ function ProductsGrid({
   const [hasMore, setHasMore] = useState(
     initialProducts.length < totalProducts
   );
+  const pathname = usePathname();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (pathname !== '/favorites') return;
+
+    setProducts(initialProducts);
+    setPage(1);
+    setHasMore(initialProducts.length < totalProducts);
+    setIsLoadingMore(false);
+  }, [initialProducts, totalProducts, pathname]);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;

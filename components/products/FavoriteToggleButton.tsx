@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { toggleFavoriteAction } from '@/utils/actions';
 import { FaHeart, FaRegHeart } from 'react-icons/fa6';
 import { TbReload } from 'react-icons/tb';
 import { CardSignInButton } from '../form/Buttons';
 import { useUser } from '@clerk/nextjs';
+import { toast } from 'sonner';
 
 type Props = {
   productId: string;
@@ -23,6 +24,7 @@ export default function FavoriteToggleButton({
   initialFavoriteId = null,
 }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // 本地 optimistic 狀態
   const [favoriteId, setFavoriteId] = useState<string | null>(
@@ -69,6 +71,17 @@ export default function FavoriteToggleButton({
 
       // 以 server 實際回傳為準（包含真正的 favoriteId 或 null）
       setFavoriteId(res.favoriteId);
+
+      if (res.favoriteId) {
+        toast.success('Added to favorites');
+      } else {
+        toast.success('Removed from favorites');
+      }
+
+      // ⭐ 關鍵：若在 /favorites 頁面，而且這次變成「沒有 favoriteId」= 取消收藏
+      if (pathname === '/favorites' && !res.favoriteId) {
+        router.refresh();
+      }
     });
   };
 

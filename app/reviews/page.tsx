@@ -16,8 +16,8 @@ async function ReviewsPage() {
         {reviews.map((review, idx) => {
           console.log('review image', idx, review.product.image);
           const { comment, rating } = review;
-          const { name, image } = review.product;
-          const reviewInfo = { comment, rating, name, image };
+          const { name, image, id } = review.product;
+          const reviewInfo = { comment, rating, name, image, id };
           return (
             <ReviewCard key={review.id} reviewInfo={reviewInfo}>
               <DeleteReview reviewId={review.id} />

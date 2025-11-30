@@ -15,6 +15,7 @@ function FormContainer({
 }) {
   const [state, formAction] = useActionState(action, initialState);
   useEffect(() => {
+    console.log(state.message);
     if (state.message) {
       toast.success(state.message);
     }
